@@ -33,6 +33,9 @@ start_hr, start_min = 10, 30
 end_hr, end_min = 20, 30
 start_time = dt.time(start_hr, start_min )
 end_time = dt.time(end_hr, end_min)
+
+# store all diary entries
+st.session_state['diaries'] = []
   
 
 
@@ -197,6 +200,15 @@ PLOTTER.view_isometric()
 PLOTTER.window_size = [2000, 1000]
 
 stpyvista(PLOTTER)
+
+# diary entries
+diary_entry = st.text_input('Enter Your Diary:', placeholder='I was feeling crazy!')
+st.session_state['diaries'].append((timeframe_start, diary_entry))
+
+st.write('Your diaries:')
+for (t, diary) in st.session_state['diaries']:
+    st.write(f'At time {t}, {diary}')
+
 
 
 print('timeframe_start', timeframe_start, 'timeframe_end', timeframe_end)
