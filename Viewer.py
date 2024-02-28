@@ -27,7 +27,7 @@ rs_pose_dir = rs_recording_root + 'ViTPose'
 
 # count all recordings
 num_recordings = len(os.listdir(rs_mesh_dir))
-print("num_recordings", num_recordings)
+# print("num_recordings", num_recordings)
 
 start_hr, start_min = 10, 30
 end_hr, end_min = 20, 30
@@ -35,7 +35,8 @@ start_time = dt.time(start_hr, start_min )
 end_time = dt.time(end_hr, end_min)
 
 # store all diary entries
-st.session_state['diaries'] = []
+# st.session_state['diaries'] = []
+# st.session_state['cpos'] = None
   
 
 
@@ -196,22 +197,32 @@ PLOTTER.add_mesh(pcd, cmap='binary_r', show_edges=False, edge_color="k",
                     style='points', point_size=2)
 
 PLOTTER.background_color = "white"
+
+# st.session_state['cpos']=PLOTTER.show(cpos=st.session_state['cpos'], return_cpos=True)
 PLOTTER.view_isometric()
+    
 PLOTTER.window_size = [2000, 1000]
 
 stpyvista(PLOTTER)
 
 # diary entries
-diary_entry = st.text_input('Enter Your Diary:', placeholder='I was feeling crazy!')
-st.session_state['diaries'].append((timeframe_start, diary_entry))
+if 'diaries' not in st.session_state:
+    st.session_state['diaries'] = []
+# empty the text input box after enter
+def diary_submit():
+    st.session_state['diaries'].append((timeframe_start, st.session_state.diary_store))
+    st.session_state.diary_store = ''
+st.text_input('Enter Your Diary:', key='diary_store', on_change=diary_submit, placeholder='I was feeling crazy!')
+
+
 
 st.write('Your diaries:')
-for (t, diary) in st.session_state['diaries']:
-    st.write(f'At time {t}, {diary}')
+print(st.session_state['diaries'])
+if st.session_state['diaries']:
+    for (t, diary) in st.session_state['diaries']:
+        st.write(f'At time {t}, {diary}')
 
 
-
-print('timeframe_start', timeframe_start, 'timeframe_end', timeframe_end)
 
 if rgb_video:
     rgb_img_path = os.path.join(rs_rgb_dir, os.listdir(rs_rgb_dir)[timeframe_start])
