@@ -14,7 +14,7 @@ import cv2
 import random
 from openai import OpenAI
 
-
+##########  INIT  ##########
 # paths to 3d files
 room_pcd_path = '../output/aligned.ply'
 rs_recording_root = '../output/rs_recording/'
@@ -33,12 +33,6 @@ start_hr, start_min = 10, 30
 end_hr, end_min = 20, 30
 start_time = dt.time(start_hr, start_min )
 end_time = dt.time(end_hr, end_min)
-
-# store all diary entries
-# st.session_state['diaries'] = []
-# st.session_state['cpos'] = None
-  
-
 
 
 # @st.cache_resource
@@ -73,23 +67,10 @@ end_time = dt.time(end_hr, end_min)
 #     PLOTTER.window_size = [2000, 1000]
 #     return PLOTTER
 
-# Streamed response emulator
-def response_generator():
-    response = random.choice(
-        [
-            "Hello there! How can I assist you today?",
-            "Hi, human! Is there anything I can help you with?",
-            "Do you need help?",
-        ]
-    )
-    for word in response.split():
-        yield word + " "
-        time.sleep(0.05)
 
 
 
-
-# sidebar
+########## SIDEBAR ##########
 with st.sidebar:
 
     # user pick time
@@ -164,14 +145,11 @@ with st.sidebar:
             st.session_state.messages.append({"role": "assistant", "content": response})
 
 
-# title
+##########  TITLE  ##########
 st.title('Your 4D Diary')
 
 
-# 3d viewer
-# the whole room + mesh at timeframe
-# stpyvista(stpv_readfile())
-
+######### 3D VIEWER #########
 # set up plotter
 PLOTTER = pv.Plotter()
 
@@ -196,16 +174,18 @@ pcd = pv.read(room_pcd_path)
 PLOTTER.add_mesh(pcd, cmap='binary_r', show_edges=False, edge_color="k", 
                     style='points', point_size=2)
 
-PLOTTER.background_color = "white"
-
+# # fix camera pose
 # st.session_state['cpos']=PLOTTER.show(cpos=st.session_state['cpos'], return_cpos=True)
+
+PLOTTER.background_color = "white"
 PLOTTER.view_isometric()
-    
 PLOTTER.window_size = [2000, 1000]
 
 stpyvista(PLOTTER)
 
-# diary entries
+
+########## DIARIES ##########
+# ask for diary entries
 if 'diaries' not in st.session_state:
     st.session_state['diaries'] = []
 # empty the text input box after enter
@@ -214,8 +194,7 @@ def diary_submit():
     st.session_state.diary_store = ''
 st.text_input('Enter Your Diary:', key='diary_store', on_change=diary_submit, placeholder='I was feeling crazy!')
 
-
-
+# show entered diaries
 st.write('Your diaries:')
 print(st.session_state['diaries'])
 if st.session_state['diaries']:
@@ -223,7 +202,7 @@ if st.session_state['diaries']:
         st.write(f'At time {t}, {diary}')
 
 
-
+########## TEMP IMGS ##########
 if rgb_video:
     rgb_img_path = os.path.join(rs_rgb_dir, os.listdir(rs_rgb_dir)[timeframe_start])
     st.image(rgb_img_path)

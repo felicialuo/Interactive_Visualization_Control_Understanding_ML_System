@@ -1,2 +1,6 @@
-# streamlit
+# Streamlit
  
+## Run
+```
+streamlit run Viewer.py
+```
