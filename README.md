@@ -7,3 +7,4 @@ Felicia Zhixin Luo, MSCD Thesis
 ```
 streamlit run Viewer.py
 ```
+![preview](preview.png)
