@@ -192,6 +192,7 @@ if 'diaries' not in st.session_state:
 def diary_submit():
     st.session_state['diaries'].append((timeframe_start, st.session_state.diary_store))
     st.session_state.diary_store = ''
+st.write(f'At time {timeframe_start}:')
 st.text_input('Enter Your Diary:', key='diary_store', on_change=diary_submit, placeholder='I was feeling crazy!')
 
 # show entered diaries
