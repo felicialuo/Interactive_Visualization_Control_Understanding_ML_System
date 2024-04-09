@@ -1,6 +1,7 @@
 import cv2
 import csv
-from fractions import Fraction
+import os
+
 
 def readLabel2color():
     with open("../realtime_object_detection_w_depth/unique_label2color.csv", mode="r") as file:
@@ -77,4 +78,38 @@ def drawSKLTACT(csv_path, frame, color=(255,0,0)):
             label, confidence = row
             cv2.putText(frame, f"{label} {confidence}", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
        
+
+
+def compile_knowledge_base(PATH_OUT, DIR_IN, i_start, i_end):
+    all_csv = sorted([f for f in os.listdir(DIR_IN)])
+
+    with open(PATH_OUT, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        for csv_path in all_csv[i_start : i_end]:
+            to_write = []
+            with open(os.path.join(DIR_IN, csv_path), mode='r') as label_file:
+                reader  = csv.reader(label_file)
+                next(reader)
+                for row in reader:
+                    to_write.extend(row[:2])
+            # make sure all rows are same length
+            if len(to_write) < 50: to_write += [" "] * (50 - len(to_write))
+            writer.writerow([csv_path[:8].replace("_", ":")] + to_write)
+
+
+def reinit_assistant(session_state, ifRGB, ifDepth, ifObjDet, ifPose, ifActRecog, timeframe_start, timeframe_end):
+    if (session_state.ifRGB != ifRGB or session_state.ifDepth != ifDepth or session_state.ifObjDet != ifObjDet\
+        or session_state.ifPose != ifPose or session_state.ifActRecog != ifActRecog\
+            or session_state.timeframe_start != timeframe_start  or session_state.timeframe_end != timeframe_end):
+        
+        session_state.ifRGB = ifRGB
+        session_state.ifDepth = ifDepth
+        session_state.ifObjDet = ifObjDet
+        session_state.ifPose = ifPose
+        session_state.ifActRecog = ifActRecog
+        session_state.timeframe_start = timeframe_start 
+        session_state.timeframe_end = timeframe_end
+
+        print("===============REINIT ASSISTANT===============")
+        return True
 
