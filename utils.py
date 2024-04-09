@@ -80,11 +80,13 @@ def drawSKLTACT(csv_path, frame, color=(255,0,0)):
        
 
 
-def compile_knowledge_base(PATH_OUT, DIR_IN, i_start, i_end):
+def compile_knowledge_base(dataset_folder, header, DIR_IN, i_start, i_end):
+    PATH_OUT = dataset_folder + header.replace(" ", "_") + ".csv"
     all_csv = sorted([f for f in os.listdir(DIR_IN)])
 
     with open(PATH_OUT, mode='w', newline='') as file:
         writer = csv.writer(file)
+        writer.writerow([header])
         for csv_path in all_csv[i_start : i_end]:
             to_write = []
             with open(os.path.join(DIR_IN, csv_path), mode='r') as label_file:
@@ -95,6 +97,8 @@ def compile_knowledge_base(PATH_OUT, DIR_IN, i_start, i_end):
             # make sure all rows are same length
             if len(to_write) < 50: to_write += [" "] * (50 - len(to_write))
             writer.writerow([csv_path[:8].replace("_", ":")] + to_write)
+
+    return PATH_OUT
 
 
 def reinit_assistant(session_state, ifRGB, ifDepth, ifObjDet, ifPose, ifActRecog, timeframe_start, timeframe_end):

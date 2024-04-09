@@ -45,11 +45,6 @@ DIR_sklt_act_recog = DATASET_FOLDER + 'skeleton_act_recog'
 
 DIR_wholescene_img = DATASET_FOLDER + 'whole_scene_image'
 
-PATH_obj_det_knowledge = DATASET_FOLDER + 'object_detection.csv'
-PATH_clip_knowledge = DATASET_FOLDER + 'activity_recognition_clip.csv'
-PATH_vclip_knowledge = DATASET_FOLDER + 'activity_recognition_vclip.csv'
-PATH_sklt_act_recog_knowledge = DATASET_FOLDER + 'skeleton_act_recog.csv'
-
 start_hr, start_min = 18, 7
 end_hr, end_min = 20, 48
 start_time = dt.time(start_hr, start_min )
@@ -64,17 +59,7 @@ if "ifActRecog" not in st.session_state: st.session_state.ifActRecog = False
 if "timeframe_start" not in st.session_state: st.session_state.timeframe_start = False
 if "timeframe_end" not in st.session_state: st.session_state.timeframe_end = False
 
-
-def construct_2d_viewer(t_start, t_end, fps, ifRGB, ifDepth, ifObjDet, ifPose, ifActRecog):
-    # t_start = str(t_start).replace(":", "_")
-    # t_end = str(t_end).replace(":", "_")
-
-    # video_path = os.path.join(DIR_temp_viewer, t_start + "_" + t_end + ".mp4")
-    video_path = os.path.join(DATASET_FOLDER, "temp_viewer.mp4")
-    # fourcc = cv2.VideoWriter_fourcc(*'x264') #H264
-    # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    fourcc = cv2.VideoWriter_fourcc(*'avc1')
-    out = cv2.VideoWriter(video_path, fourcc, fps, (640*2, 480))
+def get_start_idx_length(t_start, t_end):
 
     # Calculate the difference in seconds
     date = datetime.date.today()  # Use any arbitrary date
@@ -85,6 +70,18 @@ def construct_2d_viewer(t_start, t_end, fps, ifRGB, ifDepth, ifObjDet, ifPose, i
     all_color_frames = sorted([f for f in os.listdir(DIR_color)])
     # print('**********all_color_frames', len(all_color_frames))
     idx_start = next((i for i, f in enumerate(all_color_frames) if f.startswith(str(t_start).replace(":", "_"))), None)
+
+    return idx_start, t_length
+
+def construct_2d_viewer(idx_start, t_length, fps, ifRGB, ifDepth, ifObjDet, ifPose, ifActRecog):
+    video_path = os.path.join(DATASET_FOLDER, "temp_viewer.mp4")
+    # fourcc = cv2.VideoWriter_fourcc(*'x264') #H264
+    # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    fourcc = cv2.VideoWriter_fourcc(*'avc1')
+    out = cv2.VideoWriter(video_path, fourcc, fps, (640*2, 480))
+    
+    all_color_frames = sorted([f for f in os.listdir(DIR_color)])
+    # print('**********all_color_frames', len(all_color_frames))
 
     all_video_csv = sorted([f for f in os.listdir(DIR_vclip)])
     # print('**********all_color_videos', len(all_video_csv))
@@ -138,7 +135,7 @@ def construct_2d_viewer(t_start, t_end, fps, ifRGB, ifDepth, ifObjDet, ifPose, i
 
     out.release()
 
-    return video_path, idx_start, t_length
+    return video_path
 
 
 ########## SIDEBAR ##########
@@ -166,10 +163,11 @@ with st.sidebar:
     ifRGB = st.toggle('RGB Video')
     ifDepth = st.toggle('Depth Video')
     ifObjDet = st.toggle('Object Detection')
-    ifPose = st.toggle('Pose Estimation')
     ifActRecog = st.toggle('Activity Recognition')
+    ifPose = st.toggle('Pose Estimation')
+    
 
-    viewer_path, idx_start, t_length = construct_2d_viewer(timeframe_start, timeframe_end, FPS, ifRGB, ifDepth, ifObjDet, ifPose, ifActRecog)
+    idx_start, t_length = get_start_idx_length(timeframe_start, timeframe_end)
     print("173")
 
     # Connect to GPT
@@ -208,35 +206,39 @@ with st.sidebar:
         knowledge_file_ids = []
         # Add knowledge base
         if ifObjDet and ifRGB:
-            compile_knowledge_base(PATH_obj_det_knowledge, DIR_obj_det, idx_start, idx_start+t_length)
+            PATH_obj_det_knowledge = compile_knowledge_base(DATASET_FOLDER, 'object detection using YOLO', DIR_obj_det, idx_start, idx_start+t_length)
             obj_det_knowledge = openai_client.files.create(
                     file=open(PATH_obj_det_knowledge, "rb"), 
                     purpose="assistants"
             )
             knowledge_file_ids.append(obj_det_knowledge.id)
+            print("obj_det_knowledge", obj_det_knowledge.id)
 
         if ifActRecog and ifRGB:
-            compile_knowledge_base(PATH_clip_knowledge, DIR_clip, idx_start, idx_start+t_length)
+            PATH_clip_knowledge = compile_knowledge_base(DATASET_FOLDER, 'activity recognition using CLIP', DIR_clip, idx_start, idx_start+t_length)
             clip_knowledge = openai_client.files.create(
                     file=open(PATH_clip_knowledge, "rb"), 
                     purpose="assistants"
             )
             knowledge_file_ids.append(clip_knowledge.id)
+            print("clip_knowledge", clip_knowledge.id)
 
-            compile_knowledge_base(PATH_vclip_knowledge, DIR_vclip, idx_start//60, (idx_start+t_length)//60)
+            PATH_vclip_knowledge = compile_knowledge_base(DATASET_FOLDER, 'activity recognition using video finetuned CLIP', DIR_vclip, idx_start//60, (idx_start+t_length)//60)
             vclip_knowledge = openai_client.files.create(
                     file=open(PATH_vclip_knowledge, "rb"), 
                     purpose="assistants"
             )
             knowledge_file_ids.append(vclip_knowledge.id)
+            print("vclip_knowledge", vclip_knowledge.id)
 
             if ifPose:
-                compile_knowledge_base(PATH_sklt_act_recog_knowledge, DIR_sklt_act_recog, idx_start//60, (idx_start+t_length)//60)
+                PATH_sklt_act_recog_knowledge = compile_knowledge_base(DATASET_FOLDER, 'skeleton-based activity recognition', DIR_sklt_act_recog, idx_start//60, (idx_start+t_length)//60)
                 sklt_act_recog_knowledge = openai_client.files.create(
                         file=open(PATH_sklt_act_recog_knowledge, "rb"), 
                         purpose="assistants"
                 )
                 knowledge_file_ids.append(sklt_act_recog_knowledge.id)
+                print("sklt_act_recog_knowledge", sklt_act_recog_knowledge.id)
 
         print("238")
 
@@ -248,7 +250,7 @@ with st.sidebar:
             messages=[
                     {
                         "role": "user",
-                        "content": "In a few sentences, summarize the activities happened in the space. Be concise.",
+                        "content": "Based on the provided logs, summarize the activities happened in CoDe Lab. Be concise.",
                         "file_ids": knowledge_file_ids,
                         # "file_ids": [],
                     }
@@ -270,21 +272,21 @@ with st.sidebar:
             assistant_id=st.session_state.assistant.id,
         )
 
-        # Retrieve the list of messages
-        st.session_state.messages = openai_client.beta.threads.messages.list(
-            thread_id=st.session_state.thread.id
-        )
-        # Display messages
-        for message in reversed(st.session_state.messages.data):
-            if message.role in ["user", "assistant"]:
-                with st.chat_message(message.role):
-                    for content_part in message.content:
-                        message_text = content_part.text.value
-                        st.markdown(message_text)
+        # # Retrieve the list of messages
+        # st.session_state.messages = openai_client.beta.threads.messages.list(
+        #     thread_id=st.session_state.thread.id
+        # )
+        # # Display messages
+        # for message in reversed(st.session_state.messages.data):
+        #     if message.role in ["user", "assistant"]:
+        #         with st.chat_message(message.role):
+        #             for content_part in message.content:
+        #                 message_text = content_part.text.value
+        #                 st.markdown(message_text)
 
         print("280")
     # If the run is completed, display the messages
-    elif hasattr(st.session_state.run, 'status') and st.session_state.run.status == "completed":
+    if hasattr(st.session_state.run, 'status') and st.session_state.run.status == "completed":
         # Retrieve the list of messages
         st.session_state.messages = openai_client.beta.threads.messages.list(
             thread_id=st.session_state.thread.id
@@ -357,10 +359,13 @@ st.title('What Happens in CoDe Lab?')
 
 
 ######### 2D VIEWER #########
+viewer_path = construct_2d_viewer(idx_start, t_length, FPS, ifRGB, ifDepth, ifObjDet, ifPose, ifActRecog)
 video_file = open(viewer_path, 'rb')
 video_bytes = video_file.read()
 
-if ifRGB: st.video(video_bytes)
+if ifRGB: 
+    st.header("The machine's understanding:")
+    st.video(video_bytes)
 print("358")
 
 obj_legend_path = os.path.join(DATASET_FOLDER, "label2color_legend.PNG")
@@ -370,7 +375,7 @@ if ifObjDet: st.image(obj_legend)
 
 print("365")
 ########## DIARIES ##########
-st.header('What were you feeling?')
+st.header('Would you like to share your thoughts?')
 diary_left, diary_right = st.columns(2)
 with diary_left:
     diary_t_start = st.time_input('From', value=timeframe_start, step=60)
