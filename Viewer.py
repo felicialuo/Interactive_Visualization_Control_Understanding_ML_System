@@ -159,11 +159,11 @@ with st.sidebar:
     )
 
     # data/ML switch buttons
-    st.subheader('Camera')
+    st.subheader('Select data collection and ML computation you want to opt in')
     ifRGB = st.toggle('RGB Video')
     ifDepth = st.toggle('Depth Video')
-    ifObjDet = st.toggle('Object Detection')
     ifActRecog = st.toggle('Activity Recognition')
+    ifObjDet = st.toggle('Object Detection')
     ifPose = st.toggle('Pose Estimation')
     
 
@@ -172,6 +172,7 @@ with st.sidebar:
 
     # Connect to GPT
     st.subheader('Ask Me Anything!')
+    st.write("Based on your selection, a smart building manager powered by ML systems is trying to understand activities happened in the space...")
 
     # Create an OpenAI client with your API key
     openai_client = openai.Client(api_key=st.secrets["OPENAI_API_KEY"]) 
@@ -355,7 +356,7 @@ with st.sidebar:
 
 print("348")
 ##########  TITLE  ##########
-st.title('What Happens in CoDe Lab?')
+st.title('A 4D Diary of CoDe Lab')
 
 
 ######### 2D VIEWER #########
@@ -375,7 +376,7 @@ if ifObjDet: st.image(obj_legend)
 
 print("365")
 ########## DIARIES ##########
-st.header('Would you like to share your thoughts?')
+st.header('Your thoughts or feelings?')
 diary_left, diary_right = st.columns(2)
 with diary_left:
     diary_t_start = st.time_input('From', value=timeframe_start, step=60)
@@ -402,7 +403,7 @@ def diary_submit():
 
     st.session_state.diary_store = ''
 
-current_diary = st.text_input('Enter Your Diary:', key='diary_store', on_change=diary_submit, placeholder='I was feeling crazy!')
+current_diary = st.text_input('Enter Your Diary:', key='diary_store', on_change=diary_submit, placeholder='we had fun with friends!')
 
 # show entered diaries
 st.write('Your diaries:')

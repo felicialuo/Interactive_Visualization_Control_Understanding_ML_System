@@ -38,9 +38,9 @@ def drawObjectDetection(obj_det_csv_path, color_frame, ifDepth):
                 cv2.putText(color_frame,distance_string,(left,top+10), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
 
 
-def drawCLIP(csv_path, frame, color=(0,0,255)):
-    height = 260
-    cv2.putText(frame, "Per Second Prediction:", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1),
+def drawCLIP(csv_path, frame, color=(0,255,255)):
+    height = 50
+    cv2.putText(frame, "Per Second Activity Recognition:", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1),
     with open(csv_path, mode='r') as file:
         csv_reader = csv.reader(file)
         next(csv_reader)
@@ -51,9 +51,9 @@ def drawCLIP(csv_path, frame, color=(0,0,255)):
             cv2.putText(frame, f"{label} {confidence}", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
             
 
-def drawVCLIP(csv_path, frame, color=(255,255,255)):
-    height = 330
-    cv2.putText(frame, "Per Minute Prediction:", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
+def drawVCLIP(csv_path, frame, color=(255,0,0)):
+    height = 120
+    cv2.putText(frame, "Per Minute Activity Recognition:", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
     
     with open(csv_path, mode='r') as file:
         csv_reader = csv.reader(file)
@@ -65,18 +65,18 @@ def drawVCLIP(csv_path, frame, color=(255,255,255)):
             cv2.putText(frame, f"{label} {confidence}", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
             
 
-def drawSKLTACT(csv_path, frame, color=(255,0,0)):
-    height = 400
-    cv2.putText(frame, "Skeleton-based Prediction:", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
+def drawSKLTACT(csv_path, frame, color=(255,255,255)):
+    height = 10
+    cv2.putText(frame, "Skeleton-based Activity Recognition:", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
     
-    with open(csv_path, mode='r') as file:
-        csv_reader = csv.reader(file)
-        next(csv_reader)
+    # with open(csv_path, mode='r') as file:
+    #     csv_reader = csv.reader(file)
+    #     next(csv_reader)
 
-        for row in csv_reader:
-            height += 10
-            label, confidence = row
-            cv2.putText(frame, f"{label} {confidence}", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
+    #     for row in csv_reader:
+    #         height += 10
+    #         label, confidence = row
+    #         cv2.putText(frame, f"{label} {confidence}", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
        
 
 
