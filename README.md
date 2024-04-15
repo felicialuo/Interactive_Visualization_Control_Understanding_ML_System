@@ -1,5 +1,6 @@
-# IHAR Interactive Hub for Activity Recognition
-Prototype-in-progress: Empowering Occupants: Interactive Hub for Human Activity Data Collection and ML Computation within Built Environments.  
+# Interactive Visualization, Control, and Understanding of Data Collection and ML Computation within Built Environments 
+Prototype-in-progress: A 4D Diary Co-authored by Human and Machine: Interactively Visualize, Control, and Understand Data Collection and ML Computation within Built Environments
+  
 Felicia Zhixin Luo, MSCD Thesis
 
 
