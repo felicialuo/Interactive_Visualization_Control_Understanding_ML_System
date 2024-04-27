@@ -51,7 +51,7 @@ def drawCLIP(csv_path, frame, color=(0,255,255)):
             cv2.putText(frame, f"{label} {confidence}", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
             
 
-def drawVCLIP(csv_path, frame, color=(255,0,0)):
+def drawVCLIP(csv_path, frame, color=(255,255,255)):
     height = 120
     cv2.putText(frame, "Per Minute Activity Recognition:", (5,height), cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
     
@@ -86,9 +86,9 @@ def compile_knowledge_base(dataset_folder, header, DIR_IN, i_start, i_end):
 
     with open(PATH_OUT, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([header])
+        # writer.writerow([header])
         for csv_path in all_csv[i_start : i_end]:
-            to_write = []
+            to_write = [header]
             with open(os.path.join(DIR_IN, csv_path), mode='r') as label_file:
                 reader  = csv.reader(label_file)
                 next(reader)
