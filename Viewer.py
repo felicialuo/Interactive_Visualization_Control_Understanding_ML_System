@@ -32,6 +32,7 @@ DATASET_FOLDER = '../datasets/event_20240405_18_06_48_fps1_clip_1_0/'
 DIR_ply = DATASET_FOLDER + 'pcd_ply'
 DIR_color = DATASET_FOLDER + 'color'
 DIR_depth = DATASET_FOLDER + 'depth'
+DIR_depth_img = DATASET_FOLDER + 'depth_img'
 DIR_obj_det = DATASET_FOLDER + 'object_detection_csv'
 
 DIR_obj_3d_top = DATASET_FOLDER + 'object_3D_topview'
@@ -126,12 +127,19 @@ def construct_2d_viewer(idx_start, t_length, fps, ifRGB, ifDepth, ifObjDet, ifPo
                 room_topview = cv2.imread(room_topview_path)
                 out_frame = np.hstack((frame, room_topview))
 
-            # timestamp
-            current_timeframe = all_color_frames[idx_start + i][:8].replace("_", ":")
-            cv2.putText(out_frame, current_timeframe, (1230, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,0), 1)
-                
+        elif ifDepth:
+            depth_frame_path = os.path.join(DIR_depth_img, all_color_frames[idx_start + i])
+            frame = cv2.imread(depth_frame_path)
 
-            out.write(out_frame)
+            room_topview = cv2.imread(room_topview_path)
+            out_frame = np.hstack((frame, room_topview))
+
+        # timestamp
+        current_timeframe = all_color_frames[idx_start + i][:8].replace("_", ":")
+        cv2.putText(out_frame, current_timeframe, (1230, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0,0,0), 1)
+        
+        out.write(out_frame)
+
 
     out.release()
 
@@ -172,7 +180,7 @@ with st.sidebar:
 
     # Connect to GPT
     st.subheader('Ask Me Anything!')
-    st.write("Based on your selection, a smart building manager powered by ML systems is trying to understand activities happened in the space...")
+    st.write("Based on your selection, a ML systems is trying to understand activities happened in the space...")
 
     # Create an OpenAI client with your API key
     openai_client = openai.Client(api_key=st.secrets["OPENAI_API_KEY"]) 
@@ -202,12 +210,12 @@ with st.sidebar:
         openai.api_key = st.secrets["OPENAI_API_KEY"]
 
         # Load the previously created assistant
-        st.session_state.assistant = openai.beta.assistants.retrieve("asst_RrxBX1nI1KvWcXOueMuqzKOI")
+        st.session_state.assistant = openai.beta.assistants.retrieve("asst_Ch4r64Q65Gm4kdHa1dlYcwaI")
 
         knowledge_file_ids = []
         # Add knowledge base
         if ifObjDet and ifRGB:
-            PATH_obj_det_knowledge = compile_knowledge_base(DATASET_FOLDER, 'object detection using YOLO', DIR_obj_det, idx_start, idx_start+t_length)
+            PATH_obj_det_knowledge = compile_knowledge_base(DATASET_FOLDER, 'object detection', DIR_obj_det, idx_start, idx_start+t_length)
             obj_det_knowledge = openai_client.files.create(
                     file=open(PATH_obj_det_knowledge, "rb"), 
                     purpose="assistants"
@@ -216,7 +224,7 @@ with st.sidebar:
             print("obj_det_knowledge", obj_det_knowledge.id)
 
         if ifActRecog and ifRGB:
-            PATH_clip_knowledge = compile_knowledge_base(DATASET_FOLDER, 'activity recognition using CLIP', DIR_clip, idx_start, idx_start+t_length)
+            PATH_clip_knowledge = compile_knowledge_base(DATASET_FOLDER, 'per-second activity recognition', DIR_clip, idx_start, idx_start+t_length)
             clip_knowledge = openai_client.files.create(
                     file=open(PATH_clip_knowledge, "rb"), 
                     purpose="assistants"
@@ -224,7 +232,7 @@ with st.sidebar:
             knowledge_file_ids.append(clip_knowledge.id)
             print("clip_knowledge", clip_knowledge.id)
 
-            PATH_vclip_knowledge = compile_knowledge_base(DATASET_FOLDER, 'activity recognition using video finetuned CLIP', DIR_vclip, idx_start//60, (idx_start+t_length)//60)
+            PATH_vclip_knowledge = compile_knowledge_base(DATASET_FOLDER, 'per-minute activity recognition', DIR_vclip, idx_start//60, (idx_start+t_length)//60)
             vclip_knowledge = openai_client.files.create(
                     file=open(PATH_vclip_knowledge, "rb"), 
                     purpose="assistants"
@@ -251,7 +259,7 @@ with st.sidebar:
             messages=[
                     {
                         "role": "user",
-                        "content": "Based on the provided logs, summarize the activities happened in CoDe Lab. Be concise.",
+                        "content": "Summarize the activities happened in CoDe Lab. Be concise.",
                         "file_ids": knowledge_file_ids,
                         # "file_ids": [],
                     }
@@ -286,24 +294,12 @@ with st.sidebar:
         #                 st.markdown(message_text)
 
         print("280")
-    # If the run is completed, display the messages
-    if hasattr(st.session_state.run, 'status') and st.session_state.run.status == "completed":
-        # Retrieve the list of messages
-        st.session_state.messages = openai_client.beta.threads.messages.list(
-            thread_id=st.session_state.thread.id
-        )
-        # Display messages
-        for message in reversed(st.session_state.messages.data):
-            if message.role in ["user", "assistant"]:
-                with st.chat_message(message.role):
-                    for content_part in message.content:
-                        message_text = content_part.text.value
-                        st.markdown(message_text)
 
-    print("295")
+    print("326")
+
     if prompt := st.chat_input("How can I help you?"):
-        with st.chat_message('user'):
-            st.write(prompt)
+        # with st.chat_message('user'):
+        #     st.write(prompt)
 
         # Add message to the thread
         st.session_state.messages = openai_client.beta.threads.messages.create(
@@ -321,7 +317,22 @@ with st.sidebar:
             time.sleep(1) # Wait 1 second before checking run status
             st.rerun()
 
-    print("315")
+    # If the run is completed, display the messages
+    with st.container(height=550):
+        if hasattr(st.session_state.run, 'status') and st.session_state.run.status == "completed":
+            # Retrieve the list of messages
+            st.session_state.messages = openai_client.beta.threads.messages.list(
+                thread_id=st.session_state.thread.id
+            )
+            # Display messages
+            for message in reversed(st.session_state.messages.data):
+                if message.role in ["user", "assistant"]:
+                    with st.chat_message(message.role):
+                        for content_part in message.content:
+                            message_text = content_part.text.value
+                            st.markdown(message_text)
+
+
     # Check if 'run' object has 'status' attribute
     if hasattr(st.session_state.run, 'status'):
         # Handle the 'running' status
@@ -364,9 +375,9 @@ viewer_path = construct_2d_viewer(idx_start, t_length, FPS, ifRGB, ifDepth, ifOb
 video_file = open(viewer_path, 'rb')
 video_bytes = video_file.read()
 
-if ifRGB: 
-    st.header("The machine's understanding:")
-    st.video(video_bytes)
+
+st.header("The machine's understanding:")
+st.video(video_bytes)
 print("358")
 
 obj_legend_path = os.path.join(DATASET_FOLDER, "label2color_legend.PNG")
